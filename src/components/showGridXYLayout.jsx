@@ -62,8 +62,6 @@ export default function DisplayGrid() {
 
   return (
     <div>
-      {" "}
-      {/* Ensure canvas space */}
       <ForceGraph2D
         graphData={myGraphData}
         ref={fgRef}
