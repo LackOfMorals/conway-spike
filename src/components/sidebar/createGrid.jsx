@@ -1,21 +1,32 @@
-import { DELETE_ENTIRE_GRID } from "../../utils/gql/deleteCells";
+import { useMutation } from "@apollo/client";
+import { CREATE_ENTIRE_GRID } from "../../utils/gql/createCell";
 import { GET_ENTIRE_GRID } from "../../utils/gql/getEntireGrid";
 
-import { useMutation } from "@apollo/client";
-
 /* By using refetchQueries with the same query used to get the grid, 
-the display gets updated. 
+the display gets updated. */
 
-We use running to determine if the button can be used or not
-  If Conway is running, then cannot reset.  
-  If Conway  is not running, then can reset.
+export default function CreatesGrid({ params, running }) {
+  var newCells = [];
 
-*/
+  for (var i = 1; i <= params.cellsWidth; i++) {
+    for (var k = 1; k <= params.cellsHeight; k++) {
+      newCells.push({
+        id: i.toString() + "_" + k.toString(),
+        alive: false,
+        x: i.toString(),
+        y: k.toString(),
+      });
+    }
+  }
 
-export default function ResetsGrid({ running }) {
-  const [deleteGrid, { loading, data, error }] = useMutation(
-    DELETE_ENTIRE_GRID,
+  newCells = JSON.stringify(newCells);
+
+  const [createGrid, { data, loading, error }] = useMutation(
+    CREATE_ENTIRE_GRID,
     {
+      variables: {
+        input: JSON.parse(newCells),
+      },
       /* observe what the mutation response returns */
       onCompleted: (data) => {
         console.log("Completed");
@@ -26,6 +37,7 @@ export default function ResetsGrid({ running }) {
         console.log("Error");
         console.log(error);
       },
+      /* Trigger a refresh which should cause the grid to display */
       refetchQueries: [
         {
           query: GET_ENTIRE_GRID,
@@ -35,21 +47,17 @@ export default function ResetsGrid({ running }) {
     }
   );
 
-  console.log("Running");
-  console.log(running);
-
   return (
     <div>
       <button
-        disabled={running}
         className={
           !running
             ? "px-4 py-2 bg-sky-500 hover:bg-sky-700 rounded-full ... "
             : "bg-gray-300 px-4 py-2 rounded-full cursor-not-allowed opacity-50 "
         }
-        onClick={() => deleteGrid()}
+        onClick={() => createGrid()}
       >
-        {!running ? "Reset" : "Resetted"}
+        Create
       </button>
     </div>
   );

@@ -1,3 +1,4 @@
+import CreatesGrid from "./createGrid";
 import ResetsGrid from "./resetGrid";
 
 export default function Sidebar({ params, setParams, setRunning, running }) {
@@ -11,7 +12,8 @@ export default function Sidebar({ params, setParams, setRunning, running }) {
 
   return (
     <div>
-      <h2 className="text-lg font-bold">Simulation Controls</h2>
+      <h2 className="text-lg font-bold">Simulation</h2>
+      <p>Grid choices</p>
       <div className="flex-row mt-4">
         <label className="block mt-2">Cells across: {params.cellsWidth}</label>
         <input
@@ -34,10 +36,20 @@ export default function Sidebar({ params, setParams, setRunning, running }) {
           className="w-full"
         />
       </div>
+      <div className="flex-rowv mt-4">
+        <CreatesGrid params={params} running={running} />
+      </div>
+      <div className="flex-rowv mt-4">
+        <ResetsGrid running={running} />
+      </div>
+      <div className="flex-row mt-4">
+        <hr className="h-px my-8 bg-red-400 border-0 dark:bg-red-700" />
+      </div>
+      <p>Controls</p>
       <div className="flex-row mt-4">
         <button
           onClick={() => setRunning(true)}
-          className="px-6 py-2 bg-sky-500 hover:bg-sky-700 rounded ..."
+          className="px-6 py-2 bg-sky-500 hover:bg-sky-700 rounded-full ..."
         >
           Start
         </button>
@@ -45,7 +57,7 @@ export default function Sidebar({ params, setParams, setRunning, running }) {
       <div className="flex-row mt-4">
         <button
           onClick={() => setRunning(false)}
-          className="px-6 py-2 bg-sky-500 hover:bg-sky-700 rounded ..."
+          className="px-6 py-2 bg-sky-500 hover:bg-sky-700 rounded-full ..."
         >
           Stop
         </button>
@@ -54,13 +66,10 @@ export default function Sidebar({ params, setParams, setRunning, running }) {
         <button
           value={params.step}
           onClick={(e) => incrementStep("step", Number(e.target.value))}
-          className="px-6 py-2 bg-sky-500 hover:bg-sky-700 rounded ..."
+          className="px-6 py-2 bg-sky-500 hover:bg-sky-700 rounded-full ..."
         >
           Step
         </button>
-      </div>
-      <div className="flex-rowv mt-4">
-        <ResetsGrid />
       </div>
     </div>
   );
