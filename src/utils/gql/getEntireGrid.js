@@ -9,7 +9,7 @@ import { gql } from "@apollo/client";
 export const GET_ENTIRE_GRID = gql`
   query getEntireGrid {
     cells {
-      state
+      alive
       id
       x
       y

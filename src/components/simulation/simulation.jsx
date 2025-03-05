@@ -1,4 +1,4 @@
-import DisplayGrid from "../../components/showGridXYLayout";
+import DisplayGrid from "./showGridXYLayout";
 
 export default function Simulation({ params, running }) {
   return (

@@ -1,3 +1,5 @@
+import ResetsGrid from "./resetGrid";
+
 export default function Sidebar({ params, setParams, setRunning, running }) {
   const updateParam = (key, value) => {
     setParams((prev) => ({ ...prev, [key]: value }));
@@ -56,6 +58,9 @@ export default function Sidebar({ params, setParams, setRunning, running }) {
         >
           Step
         </button>
+      </div>
+      <div className="flex-rowv mt-4">
+        <ResetsGrid />
       </div>
     </div>
   );
