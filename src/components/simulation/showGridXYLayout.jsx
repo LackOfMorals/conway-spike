@@ -1,9 +1,9 @@
-// Import everything needed to use the `useQuery` hook
-import { useQuery } from "@apollo/client";
-import { useRef } from "react";
+import { useMutation, useQuery } from "@apollo/client";
+import { useRef, useState } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 
 import { GET_ENTIRE_GRID } from "../../utils/gql/getEntireGrid";
+import { SET_CELL_ALIVE_VALUE } from "../../utils/gql/setCellAliveValue";
 
 const formatData = (data) => {
   if (!data?.cells) return { nodes: [], links: [] }; // Ensure it always returns an object
@@ -33,50 +33,86 @@ const formatData = (data) => {
   };
 };
 
-// Define colors based on state value
-const getNodeColor = (node) => {
-  switch (node.alive) {
-    case true:
-      return "green";
-    case false:
-      return "red";
-    default:
-      return "blue"; // Default color
-  }
-};
-
 export default function DisplayGrid() {
   const fgRef = useRef();
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Define useMutation at the top level
+  const [updateCellAliveStatus] = useMutation(SET_CELL_ALIVE_VALUE, {
+    onCompleted: () => {
+      console.log("Updated cells");
+      setIsUpdating(false);
+    },
+    onError: (error) => {
+      console.log("Error:", error);
+      setIsUpdating(false);
+    },
+    refetchQueries: [{ query: GET_ENTIRE_GRID, awaitRefetchQueries: true }],
+  });
+
   const { loading, error, data } = useQuery(GET_ENTIRE_GRID);
   const myGraphData = data ? formatData(data) : { nodes: [], links: [] };
 
-  const mockData = {
-    nodes: [{ id: "1" }, { id: "2" }],
-    links: [{ source: "1", target: "2" }],
-  };
+  if (loading) {
+    console.log("Loading");
+  }
 
-  if (data) console.log("Formatted Data:", myGraphData);
-  console.log("Mock data:", mockData);
+  if (data && isUpdating) {
+    setIsUpdating(false);
+  }
 
-  if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error.message}</p>;
 
+  // Custom node rendering function
+  const drawNode = (node, ctx, globalScale) => {
+    const radius = 8 / globalScale;
+
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, radius, 0, 2 * Math.PI, false);
+
+    if (node.alive) {
+      ctx.fillStyle = "green"; // Alive nodes are solid green
+      ctx.fill();
+    } else {
+      ctx.fillStyle = "white"; // Dead nodes are yellow
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "black"; // Black outline
+      ctx.stroke();
+    }
+  };
+
+  const handleNodeClick = (node) => {
+    if (isUpdating) return; // Prevent multiple rapid clicks
+    setIsUpdating(true);
+
+    const request_where = { id: { eq: node.id } };
+    const request_update = { alive: { set: !node.alive } };
+
+    console.log("Request variables", request_where, request_update);
+
+    updateCellAliveStatus({
+      variables: { where: request_where, update: request_update },
+    });
+  };
+
   return (
-    <div>
+    <div className={isUpdating ? "cursor-progress" : "cursor-pointer"}>
       <ForceGraph2D
         graphData={myGraphData}
         ref={fgRef}
-        linkColor={() => "#999"}
-        nodeColor={getNodeColor} // Set color based on alive
+        linkColor={() => "#00c7e3"}
+        linkWidth={1}
         nodeRelSize={8}
-        enableNodeDrag={false} // Prevents users from dragging nodes
-        d3VelocityDecay={0} // Disables force layout
-        d3AlphaMin={1} // Stops force simulation
-        cooldownTicks={0} // Prevents repositioning
+        enableNodeDrag={false}
+        d3VelocityDecay={0}
+        cooldownTicks={0}
+        panInteraction={false}
+        d3AlphaMin={1}
+        zoom={false}
         onEngineStop={() => fgRef.current?.zoomToFit(400)}
-        nodeLabel={(node) => {
-          return node.alive;
-        }}
+        onNodeClick={handleNodeClick}
+        nodeCanvasObject={drawNode} // 🎨 Custom node rendering function
       />
     </div>
   );

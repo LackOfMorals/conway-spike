@@ -1,6 +1,7 @@
 import { useMutation } from "@apollo/client";
 import { CREATE_ENTIRE_GRID } from "../../utils/gql/createCell";
 import { GET_ENTIRE_GRID } from "../../utils/gql/getEntireGrid";
+import { JOIN_CELLS_TOGETHER } from "../../utils/gql/joinCells";
 
 /* By using refetchQueries with the same query used to get the grid, 
 the display gets updated. */
@@ -21,31 +22,49 @@ export default function CreatesGrid({ params, running }) {
 
   newCells = JSON.stringify(newCells);
 
-  const [createGrid, { data, loading, error }] = useMutation(
-    CREATE_ENTIRE_GRID,
-    {
-      variables: {
-        input: JSON.parse(newCells),
+  const [createGrid, { data, error }] = useMutation(CREATE_ENTIRE_GRID, {
+    variables: {
+      input: JSON.parse(newCells),
+    },
+    /* observe what the mutation response returns */
+    onCompleted: (data) => {
+      console.log("Created cells");
+      DoStuff();
+    },
+    /* observe any error */
+    onError: (error) => {
+      console.log("Error");
+      console.log(error);
+    },
+    refetchQueries: [
+      {
+        query: GET_ENTIRE_GRID,
+        awaitRefetchQueries: true,
       },
-      /* observe what the mutation response returns */
-      onCompleted: (data) => {
-        console.log("Completed");
-        console.log(data);
+    ],
+  });
+
+  const [joinGridTogether] = useMutation(JOIN_CELLS_TOGETHER, {
+    /* observe what the mutation response returns */
+    onCompleted: () => {
+      console.log("Completed building grid");
+    },
+    /* observe any error */
+    onError: () => {
+      console.log("Error");
+    },
+    /* Trigger a refresh which should cause the grid to display */
+    refetchQueries: [
+      {
+        query: GET_ENTIRE_GRID,
+        awaitRefetchQueries: true,
       },
-      /* observe any error */
-      onError: (error) => {
-        console.log("Error");
-        console.log(error);
-      },
-      /* Trigger a refresh which should cause the grid to display */
-      refetchQueries: [
-        {
-          query: GET_ENTIRE_GRID,
-          awaitRefetchQueries: true,
-        },
-      ],
-    }
-  );
+    ],
+  });
+
+  const DoStuff = () => {
+    joinGridTogether();
+  };
 
   return (
     <div>
